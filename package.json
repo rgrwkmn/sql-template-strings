@@ -1,0 +1,19 @@
+{
+  "name": "ignorant-sql-template-strings",
+  "version": "1.0.0",
+  "description": "Turn template literals into prepared statements in the output format of your choosing.",
+  "main": "index.js",
+  "scripts": {
+    "test": "node tests.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rgrwkmn/sql-template-strings.git"
+  },
+  "author": "Roger Wakeman",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/rgrwkmn/sql-template-strings/issues"
+  },
+  "homepage": "https://github.com/rgrwkmn/sql-template-strings#readme"
+}
