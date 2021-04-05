@@ -1,7 +1,5 @@
 const assert = require('assert');
-
 const sql = require('./index.js');
-
 const queryNoData = sql`my_first_query`;
 
 assert.ok(
@@ -99,15 +97,8 @@ const customSql = sql.withOptions({
   queryTextKey: 'text',
   dataArrayKey: 'data',
   sqlPrepareStrat: '$',
-  addDefaultOptions: {
+  addDefaultData: {
     annoyDbaWithTableLockingLongQueries: 'always'
-  },
-  shape: (sql, data, options) => {
-    return {
-      quarry: sql,
-      dater: data,
-      yopshuns: options
-    }
   }
 });
 
@@ -117,7 +108,7 @@ const customQuery = customSql`my_custom_query(${customQueryData})`;
 assert.equal(
   customQuery.annoyDbaWithTableLockingLongQueries,
   'always',
-  'query should include addDefaultOptions'
+  'query should include addDefaultData'
 );
 assert.equal(
   customQuery.text,
@@ -133,19 +124,6 @@ assert.equal(
   customQueryData,
   'custom dataArrayKey should have the correct data'
 );
-const customShape = customQuery.shape({ hello: 'yo' });
-assert.deepEqual(
-  customShape,
-  {
-    quarry: customQuery.text,
-    dater: customQuery.data,
-    yopshuns: {
-      annoyDbaWithTableLockingLongQueries: customQuery.annoyDbaWithTableLockingLongQueries,
-      hello: 'yo'
-    }
-  },
-  'shape method should return result of custom shape option'
-);
 
 const customPrepareStrat = sql.withOptions({
   sqlPrepareStrat: (index, substitution, literal) => {
@@ -160,3 +138,11 @@ assert.equal(
   'custom(#0)',
   'custom sqlPrepareStrat function should be used if set'
 );
+
+const ids = [1, 2, 3, 4, 5, 6, 7];
+const arraySubstitution = sql`VALUES(${ids})`;
+
+assert.equal(arraySubstitution.sql, 'VALUES(?,?,?,?,?,?,?)');
+assert.deepEqual(arraySubstitution.values, ids);
+
+console.log('tests completed successfully');

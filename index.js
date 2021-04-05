@@ -6,23 +6,20 @@ const defaultOptions = {
   dataArrayKey: 'values',
   // ?, $, Function
   sqlPrepareStrat: '?',
-  addDefaultOptions: null,
-  shape: (sql, values, options) => {
-    return Object.assign({ sql, values }, options);
-  }
+  addDefaultData: null
 };
 
 function withOptions(options) {
   const {
-    queryTextKey, dataArrayKey, sqlPrepareStrat, addDefaultOptions, shape
+    queryTextKey, dataArrayKey, sqlPrepareStrat, addDefaultData
   } = Object.assign({}, defaultOptions, options);
 
   class Query {
     constructor(sql, data) {
       this[queryTextKey] = sql;
       this[dataArrayKey] = data;
-      if (addDefaultOptions) {
-        this.withData(addDefaultOptions);
+      if (addDefaultData) {
+        this.withData(addDefaultData);
       }
     }
     append(appendage) {
@@ -43,16 +40,17 @@ function withOptions(options) {
       Object.assign(this, withOpts);
       return this;
     }
-    shape(options) {
-      return shape(
-        this[queryTextKey],
-        this[dataArrayKey],
-        Object.assign({}, addDefaultOptions, options)
-      );
-    }
   }
 
-  function sql(literalSections, ...subsitutions) {
+  function getPrepareSymbol(dataIndex, substitution, literal) {
+    return typeof sqlPrepareStrat === 'function'
+      ? sqlPrepareStrat(dataIndex, substitution, literal)
+      : sqlPrepareStrat === '?'
+      ? '?'
+      : `$${dataIndex+1}`;
+  }
+
+  function sql(literalSections, ...substitutions) {
     const { raw } = literalSections;
 
     let sql = '';
@@ -60,29 +58,37 @@ function withOptions(options) {
     let dataIndex = 0;
 
     // eslint-disable-next-line id-length
-    subsitutions.forEach((subsitution, i) => {
+    substitutions.forEach((substitution, i) => {
       let literal = raw[i];
 
       if (literal.endsWith('$')) {
-        if (typeof subsitution !== 'string') {
+        if (typeof substitution !== 'string') {
           throw new SqlLiteralSubstitutionError();
         }
         // accept the value as-is
         literal = literal.slice(0, -1);
         sql += literal;
-        sql += subsitution;
+        sql += substitution;
         return;
       }
 
       sql += literal;
-      if (typeof sqlPrepareStrat === 'function') {
-        sql += sqlPrepareStrat(dataIndex, subsitution, literal);
-      } else {
-        sql += sqlPrepareStrat === '?' ? '?' : `$${dataIndex+1}`;
-      }
 
-      data.push(subsitution);
-      dataIndex++;
+      const subIsArray = Array.isArray(substitution);
+
+      if (subIsArray) {
+        sql += substitution.map((sub) => {
+          const prepareSymbol = getPrepareSymbol(dataIndex, substitution, literal);
+
+          data.push(sub);
+          dataIndex++;
+          return prepareSymbol;
+        }).join(',');
+      } else {
+        sql += getPrepareSymbol(dataIndex, substitution, literal);
+        data.push(substitution);
+        dataIndex++;
+      }
     });
 
     sql += raw[raw.length - 1];
