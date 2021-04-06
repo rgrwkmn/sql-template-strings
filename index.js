@@ -78,8 +78,7 @@ function withOptions(options) {
 
       if (subIsArray) {
         sql += substitution.map((sub) => {
-          const prepareSymbol = getPrepareSymbol(dataIndex, substitution, literal);
-
+          const prepareSymbol = getPrepareSymbol(dataIndex, sub, literal);
           data.push(sub);
           dataIndex++;
           return prepareSymbol;
