@@ -1,5 +1,5 @@
 {
-  "name": "ignorant-sql-template-strings",
+  "name": "sql-template-strings",
   "version": "1.0.0",
   "description": "Turn template literals into prepared statements in the output format of your choosing.",
   "main": "index.js",
